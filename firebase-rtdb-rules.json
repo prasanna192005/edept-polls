@@ -1,0 +1,52 @@
+{
+    "rules": {
+        "sessions": {
+            ".read": true,
+            "$sessionId": {
+                ".write": "auth != null"
+            }
+        },
+        "sessionsByCode": {
+            ".read": true,
+            "$code": {
+                ".write": "auth != null"
+            }
+        },
+        "questions": {
+            ".read": true,
+            "$sessionId": {
+                "$questionId": {
+                    ".write": "auth != null"
+                }
+            }
+        },
+        "responses": {
+            ".read": true,
+            "$sessionId": {
+                "$questionId": {
+                    "$clientId": {
+                        ".write": "!data.exists()"
+                    }
+                }
+            }
+        },
+        "results": {
+            ".read": true,
+            "$sessionId": {
+                "$questionId": {
+                    ".write": "auth != null"
+                }
+            }
+        },
+        "openEnded": {
+            ".read": true,
+            "$sessionId": {
+                "$questionId": {
+                    "$responseId": {
+                        ".write": "auth != null"
+                    }
+                }
+            }
+        }
+    }
+}
