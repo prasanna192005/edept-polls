@@ -212,7 +212,7 @@ export default function ParticipantView() {
                 className="mb-4 min-h-[150px] w-full rounded-lg border-gray-300 bg-gray-50 p-4 text-lg focus:border-indigo-500 focus:ring-indigo-500"
               />
             ) : (
-              <div className="mb-6 space-y-3">
+              <div className="mb-6 space-y-3 text-black">
                 {question.options?.map((opt, idx) => (
                   <button
                     key={idx}
