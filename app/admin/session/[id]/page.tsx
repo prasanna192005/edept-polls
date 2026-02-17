@@ -252,7 +252,7 @@ export default function SessionManage() {
                 </div>
 
                 {/* Live Results Section Placeholder - To be implemented next step if needed, or inline here */}
-                <div className="rounded-xl bg-white p-6 shadow-sm">
+                <div className="rounded-xl bg-white p-6 shadow-sm text-black">
                     <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
                         <BarChart2 size={20} />
                         Live Results

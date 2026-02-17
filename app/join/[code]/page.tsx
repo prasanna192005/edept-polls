@@ -209,7 +209,7 @@ export default function ParticipantView() {
                 value={textAnswer}
                 onChange={(e) => setTextAnswer(e.target.value)}
                 placeholder="Type your answer here..."
-                className="mb-4 min-h-[150px] w-full rounded-lg border-gray-300 bg-gray-50 p-4 text-lg focus:border-indigo-500 focus:ring-indigo-500"
+                className="mb-4 text-black min-h-[150px] w-full rounded-lg border-gray-300 bg-gray-50 p-4 text-lg focus:border-indigo-500 focus:ring-indigo-500"
               />
             ) : (
               <div className="mb-6 space-y-3 text-black">
