@@ -4,7 +4,7 @@ import { generateId } from "@/lib/utils";
 
 export async function POST(request: Request) {
   try {
-    const { sessionId, questionId, clientId, answer } = await request.json();
+    const { sessionId, questionId, clientId, answer, userName } = await request.json();
 
     if (!sessionId || !questionId || !clientId || answer === undefined) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -28,13 +28,19 @@ export async function POST(request: Request) {
     }
 
     const updates: any = {};
-    updates[`responses/${sessionId}/${questionId}/${clientId}`] = true; // Mark as responded
+    updates[`responses/${sessionId}/${questionId}/${clientId}`] = {
+      answered: true,
+      answer, // Store the answer here too for admin view
+      userName: userName || null,
+      createdAt: Date.now()
+    };
 
     if (question.type === "OPEN_ENDED") {
       const responseId = generateId();
       updates[`openEnded/${sessionId}/${questionId}/${responseId}`] = {
         text: answer,
         clientId,
+        userName: userName || null,
         createdAt: Date.now(),
       };
     } else {

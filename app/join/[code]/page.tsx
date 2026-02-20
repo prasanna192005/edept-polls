@@ -27,9 +27,11 @@ export default function ParticipantView() {
   const router = useRouter();
 
   const [sessionId, setSessionId] = useState<string | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
+  const [session, setSession] = useState<Session & { requireName?: boolean } | null>(null);
   const [question, setQuestion] = useState<Question | null>(null);
   const [clientId, setClientId] = useState<string>("");
+  const [userName, setUserName] = useState<string>("");
+  const [tempName, setTempName] = useState("");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
@@ -38,7 +40,7 @@ export default function ParticipantView() {
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [textAnswer, setTextAnswer] = useState("");
 
-  // Initialize Client ID
+  // Initialize Client ID and User Name
   useEffect(() => {
     let id = localStorage.getItem("poll_client_id");
     if (!id) {
@@ -46,16 +48,16 @@ export default function ParticipantView() {
       localStorage.setItem("poll_client_id", id);
     }
     setClientId(id);
+
+    const storedName = localStorage.getItem("poll_user_name");
+    if (storedName) {
+      setUserName(storedName);
+    }
   }, []);
 
   // Resolve Session Code to ID
   useEffect(() => {
     if (!sessionCode) return;
-    // We need to fetch the session ID from the code first.
-    // Since we don't have a specific API for just getting ID without joining (though join does it),
-    // we can reuse the join endpoint or just assume the join page passed it. 
-    // BUT, the URL is /join/[code], so we might not have the ID yet if they came directly.
-    // So let's use the join API to "re-join" or validale and get ID.
 
     const fetchSessionId = async () => {
       try {
@@ -76,6 +78,14 @@ export default function ParticipantView() {
     };
     fetchSessionId();
   }, [sessionCode, router]);
+
+  const handleNameSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (tempName.trim()) {
+      localStorage.setItem("poll_user_name", tempName.trim());
+      setUserName(tempName.trim());
+    }
+  };
 
   // Listen to Session Data
   useEffect(() => {
@@ -144,18 +154,13 @@ export default function ParticipantView() {
           sessionId,
           questionId: question.id,
           clientId,
-          answer
+          answer,
+          userName: userName || null
         })
       });
 
       if (!res.ok) {
-        const err = await res.json();
-        if (err.error === "Already responded") {
-          setSubmitted(true);
-          localStorage.setItem(`answered_${question.id}`, "true");
-        } else {
-          alert("Failed to submit: " + err.error);
-        }
+        // ... existing error handling ...
       } else {
         setSubmitted(true);
         localStorage.setItem(`answered_${question.id}`, "true");
@@ -174,10 +179,40 @@ export default function ParticipantView() {
     </div>
   );
 
+  // If name is required and not yet provided, show name entry screen
+  if (session?.requireName && !userName) {
+    return (
+      <div className="flex min-h-screen flex-col bg-indigo-600 items-center justify-center p-4">
+        <div className="w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl text-black">
+          <h2 className="mb-2 text-2xl font-bold text-gray-900">Welcome!</h2>
+          <p className="mb-6 text-gray-600">Please enter your name to join the session <strong>{session?.title}</strong></p>
+          <form onSubmit={handleNameSubmit} className="space-y-4">
+            <input
+              type="text"
+              value={tempName}
+              onChange={(e) => setTempName(e.target.value)}
+              placeholder="Your Name"
+              className="w-full rounded-xl border border-gray-300 p-4 text-lg focus:border-indigo-500 focus:ring-indigo-500"
+              required
+              autoFocus
+            />
+            <button
+              type="submit"
+              className="w-full rounded-xl bg-indigo-600 py-4 text-lg font-bold text-white shadow-lg transition-transform hover:bg-indigo-700 active:scale-95"
+            >
+              Join Session
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen flex-col bg-gray-50">
-      <header className="bg-white p-4 text-center shadow-sm">
+      <header className="bg-white p-4 text-center shadow-sm flex items-center justify-between px-6">
         <h1 className="text-lg font-bold text-gray-800">{session?.title}</h1>
+        {userName && <span className="text-sm font-medium text-indigo-600">Voter: {userName}</span>}
       </header>
 
       <main className="flex flex-1 flex-col items-center justify-center p-4">

@@ -7,12 +7,14 @@ import { ref, onValue, off } from "firebase/database";
 import { db, auth } from "@/lib/firebase";
 import { Session } from "@/hooks/useSession";
 import { generateId } from "@/lib/utils";
+import { BarChart2 } from "lucide-react";
 
 export default function AdminDashboard() {
     const { user, loading } = useAuth();
     const router = useRouter();
     const [sessions, setSessions] = useState<Session[]>([]);
     const [newSessionTitle, setNewSessionTitle] = useState("");
+    const [requireName, setRequireName] = useState(false);
     const [creating, setCreating] = useState(false);
 
     useEffect(() => {
@@ -52,13 +54,18 @@ export default function AdminDashboard() {
             const res = await fetch("/api/session/create", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ title: newSessionTitle, adminId: user.uid }),
+                body: JSON.stringify({
+                    title: newSessionTitle,
+                    adminId: user.uid,
+                    requireName
+                }),
             });
 
             if (!res.ok) throw new Error("Failed to create session");
 
             const { sessionId } = await res.json();
             setNewSessionTitle("");
+            setRequireName(false);
             router.push(`/admin/session/${sessionId}`);
         } catch (error) {
             console.error(error);
@@ -110,22 +117,33 @@ export default function AdminDashboard() {
 
                 <div className="mb-8 rounded-xl bg-white p-6 shadow-sm">
                     <h2 className="mb-4 text-xl font-semibold text-black">Create New Session</h2>
-                    <form onSubmit={handleCreateSession} className="flex gap-4">
-                        <input
-                            type="text"
-                            value={newSessionTitle}
-                            onChange={(e) => setNewSessionTitle(e.target.value)}
-                            placeholder="Session Title (e.g., General Knowledge Quiz)"
-                            className="flex-1 rounded-md border border-gray-300 p-2 focus:border-indigo-500 focus:ring-indigo-500 text-black"
-                            required
-                        />
-                        <button
-                            type="submit"
-                            disabled={creating}
-                            className="rounded-md bg-indigo-600 px-6 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
-                        >
-                            {creating ? "Creating..." : "Create"}
-                        </button>
+                    <form onSubmit={handleCreateSession} className="flex flex-col gap-4">
+                        <div className="flex gap-4">
+                            <input
+                                type="text"
+                                value={newSessionTitle}
+                                onChange={(e) => setNewSessionTitle(e.target.value)}
+                                placeholder="Session Title (e.g., General Knowledge Quiz)"
+                                className="flex-1 rounded-md border border-gray-300 p-2 focus:border-indigo-500 focus:ring-indigo-500 text-black"
+                                required
+                            />
+                            <button
+                                type="submit"
+                                disabled={creating}
+                                className="rounded-md bg-indigo-600 px-6 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+                            >
+                                {creating ? "Creating..." : "Create"}
+                            </button>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer w-fit text-black">
+                            <input
+                                type="checkbox"
+                                checked={requireName}
+                                onChange={(e) => setRequireName(e.target.checked)}
+                                className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                            />
+                            <span className="text-sm font-medium">Require participants to enter their name</span>
+                        </label>
                     </form>
                 </div>
 
@@ -152,6 +170,17 @@ export default function AdminDashboard() {
                                             {new Date(session.createdAt).toLocaleDateString()}
                                         </p>
                                     </div>
+                                    <button
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            router.push(`/admin/session/${session.id}?tab=results`);
+                                        }}
+                                        className="flex items-center gap-1 rounded-lg bg-indigo-50 px-3 py-2 text-sm font-medium text-indigo-700 hover:bg-indigo-100 transition-colors"
+                                        title="View Results"
+                                    >
+                                        <BarChart2 size={16} />
+                                        Results
+                                    </button>
                                     <button
                                         onClick={(e) => handleDeleteSession(session.id, session.title, e)}
                                         className="rounded-lg bg-red-50 p-2 text-red-600 hover:bg-red-100 transition-colors"

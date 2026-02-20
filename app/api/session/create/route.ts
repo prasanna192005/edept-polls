@@ -4,7 +4,7 @@ import { generateSessionCode, generateId } from "@/lib/utils";
 
 export async function POST(request: Request) {
   try {
-    const { title, adminId } = await request.json();
+    const { title, adminId, requireName } = await request.json();
 
     if (!title || !adminId) {
       return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
@@ -22,6 +22,7 @@ export async function POST(request: Request) {
       createdAt: now,
       isActive: true,
       currentQuestionId: null,
+      requireName: !!requireName,
     };
 
     // Use a multi-path update for atomicity

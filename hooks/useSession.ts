@@ -11,6 +11,7 @@ export interface Session {
     createdAt: number;
     isActive: boolean;
     currentQuestionId?: string | null;
+    requireName?: boolean;
 }
 
 export function useSession(sessionId: string) {
