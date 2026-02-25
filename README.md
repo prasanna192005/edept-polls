@@ -46,5 +46,4 @@ Head over to `http://localhost:3000` and start the revolution.
 Check out `/admin/login` to see the magic behind the curtain. Don't forget to set up your Firebase Auth and Database rules first (check `firebase-rtdb-rules.json`).
 
 ---
-Built with ☕ and minimal emojis by the edept team.
 
