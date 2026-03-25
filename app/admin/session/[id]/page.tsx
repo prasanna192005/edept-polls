@@ -6,7 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useSession } from "@/hooks/useSession";
 import { ref, onValue, off } from "firebase/database";
 import { db } from "@/lib/firebase";
-import { Trash2, Play, BarChart2 } from "lucide-react";
+import { Trash2, Play, BarChart3, ArrowLeft, Plus, Users, Zap, ExternalLink, Settings, Layout, CheckCircle, Copy, QrCode } from "lucide-react";
 
 type QuestionType = "MCQ" | "POLL" | "OPEN_ENDED";
 
@@ -20,6 +20,7 @@ interface Question {
 }
 
 import { Suspense } from "react";
+import { toast } from "sonner";
 
 export default function SessionManage() {
     return (
@@ -112,7 +113,7 @@ function SessionManageContent() {
             setCorrectIdx(0);
         } catch (err) {
             console.error(err);
-            alert("Failed to create question");
+            toast.error("Failed to create question");
         } finally {
             setAddingQ(false);
         }
@@ -126,98 +127,159 @@ function SessionManageContent() {
         });
     };
 
-    if (authLoading || sessionLoading) return <div className="p-8 text-center">Loading...</div>;
-    if (!session) return <div className="p-8 text-center">Session not found</div>;
+    if (authLoading || sessionLoading) return (
+        <div className="flex min-h-screen items-center justify-center bg-white text-indigo-600">
+            <Zap className="animate-pulse" size={32} fill="currentColor" />
+        </div>
+    );
+    if (!session) return <div className="p-20 text-center font-bold text-slate-400 uppercase tracking-widest">Session not found</div>;
 
     return (
-        <div className="min-h-screen bg-gray-50 p-4 md:p-8">
-            <div className="mx-auto max-w-5xl">
-                <div className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-center">
-                    <div>
-                        <h1 className="text-2xl font-bold text-gray-900">{session.title}</h1>
-                        <p className="text-gray-500">Code: <span className="font-mono text-xl font-bold text-indigo-600">{session.code}</span></p>
+        <div className="min-h-screen bg-slate-50 text-slate-900 font-sans selection:bg-indigo-100">
+            {/* Nav */}
+            <nav className="fixed top-0 w-full bg-white border-b border-slate-200 z-50">
+                <div className="mx-auto flex h-16 max-w-5xl items-center justify-between px-6">
+                    <div className="flex items-center gap-4">
+                        <button 
+                            onClick={() => router.push("/admin/dashboard")}
+                            className="flex items-center gap-2 text-slate-400 hover:text-slate-900 transition-colors"
+                        >
+                            <ArrowLeft size={18} />
+                        </button>
+                        <div className="w-px h-4 bg-slate-200 mx-2" />
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-black tracking-widest uppercase text-indigo-600">{session.code}</span>
+                            <span className="text-sm font-bold text-slate-400 truncate max-w-[150px] sm:max-w-[300px]">{session.title}</span>
+                        </div>
                     </div>
-                    <div className="flex gap-2">
-                        <button onClick={() => router.push("/admin/dashboard")} className="rounded bg-gray-200 px-4 py-2 text-sm hover:bg-gray-300">Back</button>
+                </div>
+            </nav>
+
+            <div className="mx-auto max-w-5xl px-6 pt-24 pb-20">
+                {/* Header Info */}
+                <div className="mb-10 flex flex-col sm:flex-row sm:items-end justify-between gap-6">
+                    <div>
+                        <div className="mb-2 inline-flex items-center rounded-md bg-indigo-50 px-2 py-0.5 text-[10px] font-black tracking-wider uppercase text-indigo-600 border border-indigo-100/50">
+                            Live Session
+                        </div>
+                        <h1 className="text-4xl font-black tracking-tight text-slate-900 mb-2">{session.title}</h1>
+                        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+                            <p className="text-slate-500 font-medium tracking-tight flex items-center gap-2">
+                                Participants join at <span className="text-slate-900 font-bold underline decoration-indigo-300">pulse19.vercel.app</span> with code <span className="text-indigo-600 font-black tracking-widest">{session.code}</span>
+                            </p>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => {
+                                        const url = `https://pulse19.vercel.app/join/${session.code}`;
+                                        navigator.clipboard.writeText(url);
+                                        toast.success("Link copied!");
+                                    }}
+                                    className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-600 border border-slate-200 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm"
+                                    title="Copy Join Link"
+                                >
+                                    <Copy size={14} />
+                                    Copy Link
+                                </button>
+                                <a
+                                    href={`https://qr19.vercel.app/?url=https://pulse19.vercel.app/join/${session.code}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-600 border border-slate-200 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm"
+                                    title="Generate QR Code"
+                                >
+                                    <QrCode size={14} />
+                                    QR Code
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* TAB SWITCHER */}
-                <div className="mb-8 flex border-b border-gray-200">
+                <div className="mb-10 flex gap-1 p-1 bg-slate-200/50 rounded-2xl w-fit border border-slate-200/50">
                     <button
                         onClick={() => setActiveTab("questions")}
-                        className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all ${activeTab === "questions" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                        className={`flex items-center gap-2.5 px-6 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "questions" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
                     >
-                        <Play size={18} fill={activeTab === "questions" ? "currentColor" : "none"} />
-                        Questions & Live
+                        <Layout size={16} strokeWidth={activeTab === "questions" ? 3 : 2} />
+                        Control Center
                     </button>
                     <button
                         onClick={() => setActiveTab("results")}
-                        className={`flex items-center gap-2 border-b-2 px-6 py-3 text-sm font-bold transition-all ${activeTab === "results" ? "border-indigo-600 text-indigo-600" : "border-transparent text-gray-500 hover:text-gray-700"}`}
+                        className={`flex items-center gap-2.5 px-6 py-2.5 text-xs font-black uppercase tracking-widest rounded-xl transition-all ${activeTab === "results" ? "bg-white text-indigo-600 shadow-sm" : "text-slate-500 hover:text-slate-900"}`}
                     >
-                        <BarChart2 size={18} />
-                        Session Results
+                        <BarChart3 size={16} strokeWidth={activeTab === "results" ? 3 : 2} />
+                        Analytics
                     </button>
                 </div>
 
                 <div className="mt-8">
                     {activeTab === "questions" ? (
                         <>
-                            <div className="mb-8 grid gap-6 md:grid-cols-2">
-                                <div className="rounded-xl bg-white p-6 shadow-sm text-black">
-                                    <h2 className="mb-4 text-lg font-semibold">Add New Question</h2>
-                                    <form onSubmit={handleCreateQuestion} className="space-y-4">
-                                        <div>
-                                            <label className="mb-1 block text-sm font-medium">Type</label>
+                            <div className="mb-12 grid gap-8 lg:grid-cols-5 items-start">
+                                {/* NEW QUESTION FORM */}
+                                <div className="lg:col-span-2 rounded-[2rem] bg-indigo-600 p-8 shadow-xl shadow-indigo-100/50 text-white border border-indigo-500/50">
+                                    <h2 className="mb-6 text-xl font-black tracking-tight flex items-center gap-2">
+                                        <Plus className="text-white/60" size={20} strokeWidth={3} />
+                                        Add Question
+                                    </h2>
+                                    <form onSubmit={handleCreateQuestion} className="space-y-6">
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/60">Question Type</label>
                                             <select
                                                 value={qType}
                                                 onChange={(e) => setQType(e.target.value as QuestionType)}
-                                                className="w-full rounded border p-2"
+                                                className="w-full rounded-2xl border-none bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none ring-2 ring-white/20 focus:ring-white transition-all appearance-none cursor-pointer"
                                             >
-                                                <option value="MCQ">Multiple Choice</option>
-                                                <option value="POLL">Poll</option>
-                                                <option value="OPEN_ENDED">Open Ended</option>
+                                                <option value="MCQ" className="text-slate-900">Multiple Choice</option>
+                                                <option value="POLL" className="text-slate-900">Poll (No correct answer)</option>
+                                                <option value="OPEN_ENDED" className="text-slate-900">Open Ended</option>
                                             </select>
                                         </div>
-                                        <div>
-                                            <label className="mb-1 block text-sm font-medium">Question Text</label>
+                                        <div className="space-y-2">
+                                            <label className="text-[10px] font-black uppercase tracking-widest text-white/60">Question Text</label>
                                             <textarea
                                                 value={qText}
                                                 onChange={(e) => setQText(e.target.value)}
-                                                className="w-full rounded border p-2"
+                                                className="w-full rounded-2xl border-none bg-white/10 px-4 py-3 text-sm font-bold text-white outline-none ring-2 ring-white/20 focus:ring-white transition-all placeholder-white/30"
                                                 rows={2}
+                                                placeholder="What's on your mind?"
                                                 required
                                             />
                                         </div>
 
                                         {(qType === "MCQ" || qType === "POLL") && (
-                                            <div>
-                                                <label className="mb-1 block text-sm font-medium">Options</label>
+                                            <div className="space-y-4">
+                                                <label className="text-[10px] font-black uppercase tracking-widest text-white/60">Options</label>
+                                                <div className="space-y-2">
                                                 {options.map((opt, idx) => (
-                                                    <div key={idx} className="mb-2 flex items-center gap-2">
-                                                        <input
-                                                            type="radio"
-                                                            name="correct"
-                                                            checked={correctIdx === idx}
-                                                            onChange={() => setCorrectIdx(idx)}
-                                                            className={qType === "MCQ" ? "block" : "hidden"}
-                                                        />
+                                                    <div key={idx} className="flex items-center gap-3 group/opt">
+                                                        {qType === "MCQ" && (
+                                                            <button
+                                                                type="button"
+                                                                onClick={() => setCorrectIdx(idx)}
+                                                                className={`w-6 h-6 rounded-lg flex items-center justify-center border-2 transition-all shrink-0 ${correctIdx === idx ? "bg-white border-white text-indigo-600" : "border-white/20 hover:border-white/50 text-white/50"}`}
+                                                            >
+                                                                {correctIdx === idx && <CheckCircle size={14} strokeWidth={3} />}
+                                                            </button>
+                                                        )}
                                                         <input
                                                             type="text"
                                                             value={opt}
                                                             onChange={(e) => handleOptionChange(idx, e.target.value)}
-                                                            className="flex-1 rounded border p-2"
+                                                            className="flex-1 rounded-xl border-none bg-white/10 px-4 py-2.5 text-xs font-bold text-white outline-none ring-1 ring-white/10 focus:ring-white/40 transition-all placeholder-white/20"
                                                             placeholder={`Option ${idx + 1}`}
                                                             required
                                                         />
                                                         {options.length > 2 && (
-                                                            <button type="button" onClick={() => handleRemoveOption(idx)} className="text-red-500 hover:text-red-700">
-                                                                <Trash2 size={16} />
+                                                            <button type="button" onClick={() => handleRemoveOption(idx)} className="text-white/40 hover:text-white transition-colors">
+                                                                <Trash2 size={14} />
                                                             </button>
                                                         )}
                                                     </div>
                                                 ))}
-                                                <button type="button" onClick={handleAddOption} className="text-sm text-indigo-600 hover:text-indigo-800">
+                                                </div>
+                                                <button type="button" onClick={handleAddOption} className="text-[10px] font-black tracking-widest uppercase text-white hover:underline underline-offset-4 decoration-2">
                                                     + Add Option
                                                 </button>
                                             </div>
@@ -226,36 +288,47 @@ function SessionManageContent() {
                                         <button
                                             type="submit"
                                             disabled={addingQ}
-                                            className="w-full rounded bg-indigo-600 py-2 text-white hover:bg-indigo-700 disabled:opacity-50"
+                                            className="w-full rounded-2xl bg-white py-4 text-xs font-black uppercase tracking-widest text-indigo-600 shadow-xl shadow-indigo-900/10 transition-all hover:bg-slate-50 active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2"
                                         >
-                                            {addingQ ? "Adding..." : "Add Question"}
+                                            {addingQ ? <Loader2 size={16} /> : "Add to Library"}
                                         </button>
                                     </form>
                                 </div>
 
-                                <div className="rounded-xl bg-white p-6 shadow-sm text-black">
-                                    <h2 className="mb-4 text-lg font-semibold">Questions ({questions.length})</h2>
-                                    <div className="flex max-h-[600px] flex-col gap-3 overflow-y-auto">
-                                        {questions.length === 0 && <p className="text-gray-400">No questions yet.</p>}
+                                {/* QUESTION LIST */}
+                                <div className="lg:col-span-3">
+                                    <div className="flex items-center justify-between mb-6">
+                                        <h2 className="text-sm font-black tracking-widest uppercase text-slate-400">Library ({questions.length})</h2>
+                                    </div>
+                                    <div className="space-y-3">
+                                        {questions.length === 0 && (
+                                            <div className="py-20 text-center rounded-[2rem] bg-slate-100/50 border-2 border-dashed border-slate-200">
+                                                <p className="text-slate-400 text-xs font-black uppercase tracking-widest">No questions created</p>
+                                            </div>
+                                        )}
                                         {questions.map((q) => (
-                                            <div key={q.id} className={`border-l-4 p-4 ${q.id === session.currentQuestionId ? "border-green-500 bg-green-50" : "border-gray-200 bg-gray-50"}`}>
-                                                <div className="flex items-start justify-between">
-                                                    <div>
-                                                        <span className="mb-1 inline-block rounded text-[10px] font-bold uppercase tracking-wider text-gray-500">{q.type}</span>
-                                                        <p className="font-medium">{q.questionText}</p>
+                                            <div key={q.id} className={`group relative rounded-2xl border transition-all ${q.id === session.currentQuestionId ? "bg-white border-indigo-200 border-b-4 shadow-sm" : "bg-white border-slate-200 hover:border-slate-300"}`}>
+                                                <div className="p-5 flex items-start justify-between gap-4">
+                                                    <div className="flex-1 min-w-0">
+                                                        <div className="flex items-center gap-2 mb-1.5">
+                                                            <span className="text-[8px] font-black uppercase tracking-[0.2em] text-slate-400">{q.type}</span>
+                                                            {q.id === session.currentQuestionId && (
+                                                                <span className="flex items-center gap-1.5 text-[8px] font-black uppercase tracking-[0.15em] text-indigo-600 bg-indigo-50 px-2 py-0.5 rounded-full border border-indigo-100">
+                                                                    <div className="w-1 h-1 rounded-full bg-indigo-600 animate-pulse" />
+                                                                    Live
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                        <p className={`font-bold text-sm tracking-tight truncate ${q.id === session.currentQuestionId ? "text-indigo-900" : "text-slate-900"}`}>{q.questionText}</p>
                                                     </div>
                                                     {q.id !== session.currentQuestionId && (
                                                         <button
                                                             onClick={() => handlePublish(q.id)}
-                                                            className="flex items-center gap-1 rounded bg-indigo-100 px-3 py-1 text-xs font-bold text-indigo-700 hover:bg-indigo-200"
+                                                            className="flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2 text-[10px] font-black tracking-widest uppercase text-white transition-all hover:bg-slate-800 active:scale-[0.98]"
                                                         >
-                                                            <Play size={12} /> Present
+                                                            <Play size={12} fill="currentColor" /> 
+                                                            Present
                                                         </button>
-                                                    )}
-                                                    {q.id === session.currentQuestionId && (
-                                                        <span className="flex items-center gap-1 rounded bg-green-100 px-3 py-1 text-xs font-bold text-green-700">
-                                                            Live
-                                                        </span>
                                                     )}
                                                 </div>
                                             </div>
@@ -264,23 +337,27 @@ function SessionManageContent() {
                                 </div>
                             </div>
 
-                            <div className="rounded-xl bg-white p-6 shadow-sm text-black">
-                                <h2 className="mb-4 flex items-center gap-2 text-lg font-semibold">
-                                    <BarChart2 size={20} />
-                                    Live Results (Active Question)
+                            <div className="mt-16 bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm ring-1 ring-slate-100">
+                                <h2 className="mb-10 flex items-center gap-3 text-xl font-black tracking-tight text-slate-900">
+                                    <BarChart3 className="text-indigo-600" size={24} strokeWidth={3} />
+                                    Live Interaction
                                 </h2>
                                 {session.currentQuestionId && sessionId ? (
                                     <LiveResults sessionId={sessionId} questionId={session.currentQuestionId} />
                                 ) : (
-                                    <p className="text-gray-500">No active question.</p>
+                                    <div className="py-20 text-center flex flex-col items-center">
+                                        <Zap className="text-slate-200 mb-4" size={48} />
+                                        <p className="text-slate-400 font-bold text-xs uppercase tracking-widest">No active presentation</p>
+                                        <p className="text-slate-300 text-sm mt-1">Select a question to start the live experience.</p>
+                                    </div>
                                 )}
                             </div>
                         </>
                     ) : (
-                        <div className="rounded-xl bg-white p-6 shadow-sm text-black">
-                            <h2 className="mb-6 flex items-center gap-2 text-xl font-bold">
-                                <BarChart2 size={24} className="text-indigo-600" />
-                                Overall Session Results
+                        <div className="bg-white rounded-[2.5rem] p-10 border border-slate-200 shadow-sm ring-1 ring-slate-100">
+                            <h2 className="mb-10 flex items-center gap-3 text-xl font-black tracking-tight text-slate-900">
+                                <BarChart3 className="text-indigo-600" size={24} strokeWidth={3} />
+                                Session Analytics
                             </h2>
                             <SessionResults sessionId={sessionId} questions={questions} />
                         </div>
@@ -289,6 +366,10 @@ function SessionManageContent() {
             </div>
         </div>
     );
+}
+
+function Loader2({ className, size }: { className?: string, size?: number }) {
+    return <Zap className={`${className} animate-pulse`} size={size} fill="currentColor" />;
 }
 
 // Inline Results Component for simplicity
@@ -333,36 +414,43 @@ function LiveResults({ sessionId, questionId }: { sessionId: string, questionId:
             if (!res.ok) throw new Error("Failed to delete response");
         } catch (error) {
             console.error(error);
-            alert("Error deleting response");
+            toast.error("Error deleting response");
         }
     };
 
-    if (!question) return <div>Loading question...</div>;
+    if (!question) return (
+        <div className="flex items-center justify-center p-12">
+            <Loader2 className="animate-spin text-indigo-600" size={32} />
+        </div>
+    );
 
     const total = responses.length;
 
     if (question.type === "OPEN_ENDED") {
         return (
-            <div className="space-y-4">
-                <p className="font-medium text-lg">{question.questionText}</p>
-                <div className="grid gap-3">
-                    {responses.length === 0 && <p className="text-gray-400">Waiting for responses...</p>}
+            <div className="space-y-6">
+                <p className="font-black text-xl tracking-tight text-slate-900 border-b border-slate-100 pb-4">{question.questionText}</p>
+                <div className="grid gap-4 sm:grid-cols-2">
+                    {responses.length === 0 && <p className="text-slate-400 text-xs font-bold uppercase tracking-widest text-center py-10 w-full col-span-full">Waiting for contributions...</p>}
                     {responses.map((r: any) => (
-                        <div key={r.clientId} className="group relative rounded-xl border border-gray-100 bg-gray-50 p-4 shadow-sm hover:shadow-md transition-shadow">
-                            <div className="flex justify-between items-start mb-2">
-                                <span className="font-bold text-indigo-600">{r.userName || "Anonymous"}</span>
+                        <div key={r.clientId} className="group relative rounded-[1.5rem] border border-slate-100 bg-slate-50 p-6 transition-all hover:bg-white hover:shadow-xl hover:shadow-slate-200/50 hover:border-indigo-100 flex flex-col h-full">
+                            <div className="flex justify-between items-start mb-4">
                                 <div className="flex items-center gap-2">
-                                    <span className="text-[10px] text-gray-400">{new Date(r.createdAt).toLocaleTimeString()}</span>
+                                    <div className="w-2 h-2 rounded-full bg-indigo-600" />
+                                    <span className="font-black text-[10px] uppercase tracking-widest text-indigo-600">{r.userName || "Anonymous"}</span>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">{new Date(r.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
                                     <button
                                         onClick={() => handleDeleteResponse(r.clientId)}
-                                        className="opacity-0 group-hover:opacity-100 text-red-500 hover:text-red-700 transition-opacity"
+                                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
                                         title="Delete response"
                                     >
                                         <Trash2 size={14} />
                                     </button>
                                 </div>
                             </div>
-                            <p className="text-gray-800 whitespace-pre-wrap">{r.answer}</p>
+                            <p className="text-slate-700 text-sm font-bold leading-relaxed whitespace-pre-wrap flex-1 italic">"{r.answer}"</p>
                         </div>
                     ))}
                 </div>
@@ -381,7 +469,7 @@ function LiveResults({ sessionId, questionId }: { sessionId: string, questionId:
         <div className="space-y-6">
             <p className="mb-4 text-xl font-medium">{question.questionText}</p>
 
-            <div className="space-y-4">
+            <div className="space-y-6">
                 {question.options?.map((opt, idx) => {
                     const count = counts[idx] || 0;
                     const percent = total > 0 ? Math.round((count / total) * 100) : 0;
@@ -389,23 +477,23 @@ function LiveResults({ sessionId, questionId }: { sessionId: string, questionId:
 
                     return (
                         <div key={idx} className="relative">
-                            <div className="mb-1 flex justify-between text-sm">
-                                <div className="flex items-center gap-2">
-                                    <span className={isCorrect ? "font-bold text-green-600" : ""}>{opt}</span>
-                                    {isCorrect && <span className="text-[10px] bg-green-100 text-green-700 px-1.5 py-0.5 rounded font-bold uppercase">Correct</span>}
+                            <div className="mb-2 flex justify-between items-end">
+                                <div className="flex items-center gap-3">
+                                    <span className={`text-sm font-black tracking-tight ${isCorrect ? "text-emerald-600" : "text-slate-900"}`}>{opt}</span>
+                                    {isCorrect && <span className="text-[8px] bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full font-black uppercase tracking-widest border border-emerald-200">Pick</span>}
                                 </div>
-                                <span className="font-bold">{percent}% ({count})</span>
+                                <span className="text-xs font-black tracking-widest text-slate-400">{percent}%</span>
                             </div>
-                            <div className="h-4 w-full overflow-hidden rounded-full bg-gray-100">
+                            <div className="h-3 w-full overflow-hidden rounded-full bg-slate-100 ring-1 ring-slate-200/50">
                                 <div
-                                    className={`h-full transition-all duration-500 ease-out ${isCorrect ? "bg-green-500" : "bg-indigo-500"}`}
+                                    className={`h-full transition-all duration-1000 cubic-bezier(0.4, 0, 0.2, 1) ${isCorrect ? "bg-emerald-500 shadow-[0_0_12px_rgba(16,185,129,0.3)]" : "bg-indigo-600 shadow-[0_0_12px_rgba(79,70,229,0.3)]"}`}
                                     style={{ width: `${percent}%` }}
                                 />
                             </div>
 
-                            <div className="mt-2 flex flex-wrap gap-1.5">
+                            <div className="mt-3 flex flex-wrap gap-1.5 min-h-[1.5rem]">
                                 {responses.filter(r => r.answer === idx).map(r => (
-                                    <span key={r.clientId} className={`text-[10px] px-2 py-0.5 rounded-full border ${isCorrect ? "bg-green-50 border-green-200 text-green-700" : "bg-gray-50 border-gray-200 text-gray-600"}`}>
+                                    <span key={r.clientId} className={`text-[9px] font-bold px-2 py-0.5 rounded-md border tracking-tight ${isCorrect ? "bg-emerald-50 border-emerald-100 text-emerald-700" : "bg-slate-50 border-slate-100 text-slate-500"}`}>
                                         {r.userName || "Anonymous"}
                                     </span>
                                 ))}
@@ -415,29 +503,34 @@ function LiveResults({ sessionId, questionId }: { sessionId: string, questionId:
                 })}
             </div>
 
-            <div className="mt-8 border-t pt-6">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">Participant Breakdown</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="mt-12 pt-8 border-t border-slate-100">
+                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 mb-6 flex items-center gap-2">
+                    <Users size={14} /> Participant Breakdown
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                     {responses.map((r: any) => {
                         const isCorrect = question.type === "MCQ" && r.answer === question.correctOptionIndex;
                         const isWrong = question.type === "MCQ" && r.answer !== question.correctOptionIndex;
 
                         return (
-                            <div key={r.clientId} className={`group flex items-center justify-between p-2 rounded-lg border text-sm hover:bg-white transition-colors h-10 ${isCorrect ? "bg-green-50 border-green-100" : isWrong ? "bg-red-50 border-red-100" : "bg-gray-50 border-gray-100"}`}>
-                                <span className="font-medium truncate max-w-[120px]">{r.userName || "Anonymous"}</span>
-                                <div className="flex items-center gap-2">
-                                    <span className="text-gray-400 text-[10px]">Option {r.answer + 1}</span>
+                            <div key={r.clientId} className={`group flex items-center justify-between p-4 rounded-2xl border text-xs transition-all hover:bg-white h-12 ${isCorrect ? "bg-emerald-50/50 border-emerald-100/50 shadow-sm shadow-emerald-100/20" : isWrong ? "bg-rose-50/50 border-rose-100/50 shadow-sm shadow-rose-100/20" : "bg-slate-50/50 border-slate-100/50"}`}>
+                                <div className="flex items-center gap-3 overflow-hidden">
+                                     <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${isCorrect ? "bg-emerald-500" : isWrong ? "bg-rose-500" : "bg-indigo-400"}`} />
+                                     <span className="font-bold text-slate-900 truncate">{r.userName || "Anonymous"}</span>
+                                </div>
+                                <div className="flex items-center gap-3 shrink-0">
+                                    <span className="text-slate-400 font-black tracking-widest text-[9px] uppercase">{question.type === "OPEN_ENDED" ? "Replied" : `Opt ${r.answer + 1}`}</span>
                                     {question.type === "MCQ" && (
-                                        <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded uppercase ${isCorrect ? "text-green-600" : "text-red-600"}`}>
+                                        <span className={`text-[10px] font-black rounded-lg w-5 h-5 flex items-center justify-center ${isCorrect ? "bg-emerald-100 text-emerald-600" : "bg-rose-100 text-rose-600"}`}>
                                             {isCorrect ? "✓" : "✗"}
                                         </span>
                                     )}
                                     <button
                                         onClick={() => handleDeleteResponse(r.clientId)}
-                                        className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity"
+                                        className="opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-600 transition-all"
                                         title="Delete response"
                                     >
-                                        <Trash2 size={12} />
+                                        <Trash2 size={14} />
                                     </button>
                                 </div>
                             </div>
@@ -446,7 +539,7 @@ function LiveResults({ sessionId, questionId }: { sessionId: string, questionId:
                 </div>
             </div>
 
-            <p className="mt-4 text-xs text-gray-400">Total responses: {total}</p>
+            <p className="mt-8 text-[10px] font-black uppercase tracking-widest text-slate-300">Total interactions: {total}</p>
         </div >
     );
 }
@@ -478,11 +571,10 @@ function SessionResults({ sessionId, questions }: { sessionId: string, questions
             if (!res.ok) throw new Error("Failed to delete response");
         } catch (error) {
             console.error(error);
-            alert("Error deleting response");
+            toast.error("Error deleting response");
         }
     };
 
-    // Group responses by user
     const userStats: Record<string, { userName: string, correct: number, total: number, answers: any }> = {};
 
     Object.entries(allResponses).forEach(([qId, qResponses]) => {
@@ -505,30 +597,32 @@ function SessionResults({ sessionId, questions }: { sessionId: string, questions
 
     const sortedUsers = Object.entries(userStats).sort((a, b) => b[1].correct - a[1].correct);
 
-    if (questions.length === 0) return <div className="text-gray-500">No questions in this session yet.</div>;
-    if (Object.keys(userStats).length === 0) return <div className="text-gray-500">No responses recorded yet.</div>;
+    if (questions.length === 0) return <div className="text-slate-400 font-bold text-xs uppercase tracking-widest py-10 text-center">No questions created yet.</div>;
+    if (Object.keys(userStats).length === 0) return <div className="text-slate-400 font-bold text-xs uppercase tracking-widest py-10 text-center">No responses recorded yet.</div>;
 
     return (
-        <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm">
-                <thead className="border-b bg-gray-50 text-gray-500">
-                    <tr>
-                        <th className="p-4 font-bold">Participant</th>
-                        <th className="p-4 font-bold text-center">Score</th>
+        <div className="overflow-x-auto -mx-10 px-10">
+            <table className="w-full text-left border-collapse">
+                <thead>
+                    <tr className="border-b border-slate-100">
+                        <th className="pb-6 pr-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400">Participant</th>
+                        <th className="pb-6 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center">Score</th>
                         {questions.map((q, i) => (
-                            <th key={q.id} className="p-4 font-bold text-center border-l bg-indigo-50/30" title={q.questionText}>
+                            <th key={q.id} className="pb-6 px-6 text-[10px] font-black uppercase tracking-[0.2em] text-slate-400 text-center min-w-[80px]" title={q.questionText}>
                                 Q{i + 1}
                             </th>
                         ))}
                     </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-slate-50">
                     {sortedUsers.map(([clientId, stats]) => (
-                        <tr key={clientId} className="hover:bg-gray-50">
-                            <td className="p-4 font-medium text-gray-900">{stats.userName}</td>
-                            <td className="p-4 text-center">
-                                <span className="rounded-full bg-indigo-100 px-3 py-1 font-bold text-indigo-700">
-                                    {stats.correct}/{questions.filter(q => q.type === "MCQ").length}
+                        <tr key={clientId} className="group hover:bg-slate-50/50 transition-colors">
+                            <td className="py-5 pr-6">
+                                <span className="font-black text-sm tracking-tight text-slate-900">{stats.userName}</span>
+                            </td>
+                            <td className="py-5 px-6 text-center">
+                                <span className="inline-flex h-8 px-3 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600 text-xs font-black tracking-tighter border border-indigo-100">
+                                    {stats.correct}<span className="text-[10px] text-indigo-300 mx-0.5">/</span>{questions.filter(q => q.type === "MCQ").length}
                                 </span>
                             </td>
                             {questions.map(q => {
@@ -537,25 +631,25 @@ function SessionResults({ sessionId, questions }: { sessionId: string, questions
                                 const isWrong = q.type === "MCQ" && ans !== undefined && ans !== q.correctOptionIndex;
 
                                 return (
-                                    <td key={q.id} className="group p-4 text-center border-l whitespace-nowrap relative">
-                                        <div className="flex items-center justify-center gap-1">
+                                    <td key={q.id} className="py-5 px-6 text-center whitespace-nowrap relative">
+                                        <div className="flex items-center justify-center gap-2">
                                             {ans === undefined ? (
-                                                <span className="text-gray-300">-</span>
+                                                <span className="text-slate-200"></span>
                                             ) : q.type === "OPEN_ENDED" ? (
-                                                <div className="max-w-[120px] truncate text-[10px]" title={ans as string}>{ans as string}</div>
+                                                <div className="max-w-[100px] truncate text-[10px] font-bold text-slate-400 italic" title={ans as string}>"{ans}"</div>
                                             ) : (
-                                                <span className={`inline-flex h-6 w-6 items-center justify-center rounded-full text-[10px] font-bold ${isCorrect ? "bg-green-100 text-green-700" : isWrong ? "bg-red-100 text-red-700" : "bg-gray-100 text-gray-500"}`}>
+                                                <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black tracking-tighter ${isCorrect ? "bg-emerald-100 text-emerald-600" : isWrong ? "bg-rose-100 text-rose-600" : "bg-slate-100 text-slate-400"}`}>
                                                     {isCorrect ? "✓" : isWrong ? "✗" : ans + 1}
-                                                </span>
+                                                </div>
                                             )}
 
                                             {ans !== undefined && (
                                                 <button
                                                     onClick={() => handleDeleteResponse(q.id, clientId)}
-                                                    className="opacity-0 group-hover:opacity-100 text-red-400 hover:text-red-600 transition-opacity ml-1"
-                                                    title="Delete this response"
+                                                    className="absolute -right-1 opacity-0 group-hover:opacity-100 text-slate-300 hover:text-rose-600 transition-all"
+                                                    title="Delete"
                                                 >
-                                                    <Trash2 size={10} />
+                                                    <Trash2 size={12} />
                                                 </button>
                                             )}
                                         </div>

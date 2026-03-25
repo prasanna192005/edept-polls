@@ -1,15 +1,24 @@
 @import "tailwindcss";
 
 :root {
+  /* Pulse Minimal Theme */
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0f172a; /* Deep slate for high contrast */
+  --primary: #4f46e5;    /* Pulse Indigo */
+  --primary-foreground: #ffffff;
+  --muted: #f8fafc;
+  --border: #e2e8f0;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui;
+  --font-mono: var(--font-geist-mono), ui-mono-monospace, SFMono-Regular;
 }
 
 @media (prefers-color-scheme: dark) {

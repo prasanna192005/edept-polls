@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { AuthProvider } from "@/components/AuthProvider";
+import { Toaster } from "sonner";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -14,8 +15,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Live Polls - edept",
-  description: "Real-time polling and Q&A system",
+  title: "Pulse - Real-time Engagement",
+  description: "Join live sessions, participate in polls, and engage in real-time anonymously.",
 };
 
 export default function RootLayout({
@@ -30,6 +31,7 @@ export default function RootLayout({
       >
         <AuthProvider>
           {children}
+          <Toaster position="top-center" expand={true} richColors />
         </AuthProvider>
       </body>
     </html>

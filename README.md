@@ -1,50 +1,46 @@
-# edept polls ⚡
+# Pulse ⚡
 
-Because asking "any questions?" at the end of a meeting and getting zero response is a pain we're here to fix. **edept polls** is a real-time, anonymous, and actually-fun-to-use polling platform built for engagement, not awkward silence.
+Engagement, **Simplified.** Built for the modern presenter.
+
+Live at: [pulse19.vercel.app](https://pulse19.vercel.app)
 
 ## The Why
 
-This project was born during my internship at **edept**. Why? Because using other polling websites is a headache. You either pay way too much or get stuck with a "free" tier that caps participants and locks the best features. I wanted a tool that just works—no limits, no premium gates, and all the features needed for real sessions.
+Asking "any questions?" to a silent room is a universal presenter pain. **Pulse** is a real-time, anonymous polling platform designed to break that silence. Built with a minimal, high-contrast UI, it prioritizes speed, friction-less entry, and professional aesthetics.
 
-## Core Features (The good stuff)
+## Core Features
 
-*   **Real-time Results:** Watch the bars move in real-time. It's oddly satisfying.
-*   **Total Anonymity:** Participants can speak their truth without the fear of judgment. 
-*   **Admin Overlord Dashboard:** Create, manage, and delete sessions with absolute power.
-*   **Next.js + Firebase:** Fast, snappy, and powered by Google's Realtime Database.
+*   **⚡ Real-time Interaction:** Watch live results evolve as participants vote.
+*   **👤 Total Anonymity:** Encourage honest feedback with zero participant accounts.
+*   **🎯 Presentation Mode:** A dedicated host view to present questions and analyze live data.
+*   **🔒 Secure Admin Auth:** Protected dashboard using Firebase Email/Password authentication.
+*   **📱 Universal Access:** Mobile-first design for participants to join via any device.
 
 ## Tech Stack
 
-![Next.js](https://img.shields.io/badge/Next.js-000000?style=for-the-badge&logo=nextdotjs&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?style=for-the-badge&logo=typescript&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)
-![Lucide Icons](https://img.shields.io/badge/Lucide_Icons-FFAB00?style=for-the-badge&logo=lucide&logoColor=white)
+- **Framework:** [Next.js 16](https://nextjs.org/) (App Router)
+- **Styling:** [Tailwind CSS 4](https://tailwindcss.com/)
+- **Database:** [Firebase Realtime Database](https://firebase.google.com/)
+- **Auth:** [Firebase Authentication](https://firebase.google.com/products/auth) (Email/Password)
+- **Icons:** [Lucide React](https://lucide.dev/)
 
-## High-Level Setup
+## Quick Start
 
 ### 1. Clone & Install
 ```bash
-git clone https://github.com/your-username/edept-polls.git
-cd edept-polls
+git clone https://github.com/prasanna192005/Pulse-free-ppt-polls.git
+cd Pulse-free-ppt-polls
 npm install
 ```
 
-### 2. Environment Variables
-Rename `.env.example` (or just check `.env.local`) and fill in your Firebase credentials. You'll need:
-*   `NEXT_PUBLIC_FIREBASE_API_KEY`
-*   `NEXT_PUBLIC_FIREBASE_DATABASE_URL`
-*   ...and the rest of the standard Firebase config family.
+### 2. Environment Setup
+Configure your `.env.local` using the [SETUP.md](file:///c:/Users/prasa/OneDrive/Desktop/edept/edept-polls/SETUP.md) guide.
 
-### 3. Run it
+### 3. Run Locally
 ```bash
 npm run dev
 ```
-Head over to `http://localhost:3000` and start the revolution.
-
-## Admin Access
-Check out `/admin/login` to see the magic behind the curtain. Don't forget to set up your Firebase Auth and Database rules first (check `firebase-rtdb-rules.json`).
+Open [http://localhost:3000](http://localhost:3000) to join sessions or [/admin/login](http://localhost:3000/admin/login) for the dashboard.
 
 ---
-Built with ☕ and minimal emojis by the edept team.
-
+Built with ⚡ by [@prasanna192005](https://github.com/prasanna192005)
