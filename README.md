@@ -43,4 +43,5 @@ npm run dev
 Open [http://localhost:3000](http://localhost:3000) to join sessions or [/admin/login](http://localhost:3000/admin/login) for the dashboard.
 
 ---
-Built with ⚡ by [@prasanna192005](https://github.com/prasanna192005)
+Built with ☕ and minimal emojis by the edept team.
+
