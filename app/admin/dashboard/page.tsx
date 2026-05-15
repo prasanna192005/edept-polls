@@ -154,18 +154,37 @@ export default function AdminDashboard() {
                                     {creating ? <Loader2 className="animate-spin" size={20} /> : <><Plus size={20} strokeWidth={3} /> Create</>}
                                 </button>
                             </div>
-                            <label className="flex items-center gap-3 cursor-pointer w-fit group">
-                                <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-all ${requireName ? "bg-white border-white" : "border-white/30 group-hover:border-white"}`}>
-                                    {requireName && <div className="w-2.5 h-2.5 rounded-sm bg-indigo-600" />}
-                                </div>
-                                <input
-                                    type="checkbox"
-                                    checked={requireName}
-                                    onChange={(e) => setRequireName(e.target.checked)}
-                                    className="hidden"
-                                />
-                                <span className="text-sm font-bold tracking-tight text-white/80 group-hover:text-white transition-colors">Require participant names</span>
-                            </label>
+                            <div className="flex flex-col sm:flex-row items-center gap-8 pt-2">
+                                <label className="flex items-center gap-3 cursor-pointer group">
+                                    <div 
+                                        className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${!requireName ? "bg-emerald-500" : "bg-slate-400/30"}`}
+                                        onClick={() => setRequireName(false)}
+                                    >
+                                        <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${!requireName ? "translate-x-6" : "translate-x-0"}`} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-black uppercase tracking-widest text-white">Anonymous Mode</span>
+                                        <span className="text-[10px] font-medium text-white/60">Participants join without names</span>
+                                    </div>
+                                    <input type="checkbox" checked={!requireName} onChange={(e) => setRequireName(!e.target.checked)} className="hidden" />
+                                </label>
+
+                                <div className="hidden sm:block w-px h-8 bg-white/10" />
+
+                                <label className="flex items-center gap-3 cursor-pointer group">
+                                    <div 
+                                        className={`w-12 h-6 rounded-full p-1 transition-all duration-300 ${requireName ? "bg-indigo-400" : "bg-slate-400/30"}`}
+                                        onClick={() => setRequireName(true)}
+                                    >
+                                        <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform duration-300 ${requireName ? "translate-x-6" : "translate-x-0"}`} />
+                                    </div>
+                                    <div className="flex flex-col">
+                                        <span className="text-xs font-black uppercase tracking-widest text-white/80 group-hover:text-white transition-colors">Require Names</span>
+                                        <span className="text-[10px] font-medium text-white/60">Participants must enter name</span>
+                                    </div>
+                                    <input type="checkbox" checked={requireName} onChange={(e) => setRequireName(e.target.checked)} className="hidden" />
+                                </label>
+                            </div>
                         </form>
                     </div>
                 </div>
@@ -211,16 +230,6 @@ export default function AdminDashboard() {
                                         >
                                             <Copy size={18} />
                                         </button>
-                                        <a
-                                            href={`https://qr19.vercel.app/?url=https://pulse19.vercel.app/join/${session.code}`}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            onClick={(e) => e.stopPropagation()}
-                                            className="p-2.5 rounded-xl bg-slate-50 text-slate-400 hover:text-indigo-600 border border-slate-200 border-b-2 hover:border-indigo-100 transition-all font-bold"
-                                            title="Generate QR Code"
-                                        >
-                                            <QrCode size={18} />
-                                        </a>
                                         <button
                                             onClick={(e) => {
                                                 e.stopPropagation();

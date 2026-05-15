@@ -6,7 +6,7 @@ import { useAuth } from "@/components/AuthProvider";
 import { useSession } from "@/hooks/useSession";
 import { ref, onValue, off } from "firebase/database";
 import { db } from "@/lib/firebase";
-import { Trash2, Play, BarChart3, ArrowLeft, Plus, Users, Zap, ExternalLink, Settings, Layout, CheckCircle, Copy, QrCode } from "lucide-react";
+import { Trash2, Play, BarChart3, ArrowLeft, Plus, Users, Zap, ExternalLink, Settings, Layout, CheckCircle, Copy, QrCode, X, Presentation } from "lucide-react";
 
 type QuestionType = "MCQ" | "POLL" | "OPEN_ENDED";
 
@@ -19,8 +19,9 @@ interface Question {
     isPublished: boolean;
 }
 
-import { Suspense } from "react";
+import { Suspense, useRef } from "react";
 import { toast } from "sonner";
+import { toPng } from 'html-to-image';
 
 export default function SessionManage() {
     return (
@@ -54,6 +55,8 @@ function SessionManageContent() {
     const [options, setOptions] = useState<string[]>(["", ""]);
     const [correctIdx, setCorrectIdx] = useState(0);
     const [addingQ, setAddingQ] = useState(false);
+    const [showJoinSlide, setShowJoinSlide] = useState(false);
+    const [showQRModal, setShowQRModal] = useState(false);
 
     useEffect(() => {
         if (!authLoading && !user) router.push("/admin/login");
@@ -152,6 +155,13 @@ function SessionManageContent() {
                             <span className="text-sm font-bold text-slate-400 truncate max-w-[150px] sm:max-w-[300px]">{session.title}</span>
                         </div>
                     </div>
+                    <button
+                        onClick={() => setShowJoinSlide(true)}
+                        className="flex items-center gap-2 rounded-xl bg-indigo-600 px-4 py-2 text-xs font-black uppercase tracking-wider text-white hover:bg-indigo-700 transition-all shadow-md shadow-indigo-200"
+                    >
+                        <Presentation size={14} />
+                        Present Join Info
+                    </button>
                 </div>
             </nav>
 
@@ -180,16 +190,14 @@ function SessionManageContent() {
                                     <Copy size={14} />
                                     Copy Link
                                 </button>
-                                <a
-                                    href={`https://qr19.vercel.app/?url=https://pulse19.vercel.app/join/${session.code}`}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
+                                <button
+                                    onClick={() => setShowQRModal(true)}
                                     className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2 text-xs font-black uppercase tracking-wider text-slate-600 border border-slate-200 hover:border-indigo-200 hover:text-indigo-600 transition-all shadow-sm"
-                                    title="Generate QR Code"
+                                    title="View & Download QR"
                                 >
                                     <QrCode size={14} />
                                     QR Code
-                                </a>
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -364,7 +372,390 @@ function SessionManageContent() {
                     )}
                 </div>
             </div>
+
+            {/* Join Slide Overlay */}
+            {showJoinSlide && (
+                <JoinSlide session={session} onClose={() => setShowJoinSlide(false)} />
+            )}
+
+            {/* QR Code Export Modal */}
+            {showQRModal && (
+                <QRModal session={session} onClose={() => setShowQRModal(false)} />
+            )}
         </div>
+    );
+}
+
+function QRModal({ session, onClose }: { session: any, onClose: () => void }) {
+    const url = `https://pulse19.vercel.app/join/${session.code}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(url)}&format=svg`;
+
+    const handleDownload = async () => {
+        try {
+            const response = await fetch(qrUrl);
+            const blob = await response.blob();
+            const blobUrl = window.URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = `pulse-qr-${session.code}.svg`;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            window.URL.revokeObjectURL(blobUrl);
+            toast.success("QR Code downloaded!");
+        } catch (error) {
+            console.error(error);
+            toast.error("Failed to download QR Code");
+        }
+    };
+
+    return (
+        <div className="fixed inset-0 z-[110] bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-6 animate-in fade-in duration-300">
+            <div className="bg-white rounded-[2.5rem] p-10 max-w-md w-full shadow-2xl border border-slate-100 flex flex-col items-center animate-in zoom-in-95 duration-300">
+                <div className="w-full flex justify-between items-center mb-8">
+                    <h3 className="text-xl font-black tracking-tight text-slate-900">Session QR Code</h3>
+                    <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 text-slate-400 hover:text-slate-900 transition-all">
+                        <X size={20} />
+                    </button>
+                </div>
+
+                <div className="bg-slate-50 p-6 rounded-[2rem] border border-slate-100 mb-8">
+                    <img src={qrUrl} alt="Session QR" className="w-64 h-64" />
+                </div>
+
+                <div className="w-full space-y-4">
+                    <div className="p-4 rounded-2xl bg-indigo-50 border border-indigo-100/50">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-indigo-400 mb-1">Session Link</p>
+                        <p className="text-sm font-bold text-indigo-900 truncate">{url}</p>
+                    </div>
+
+                    <button
+                        onClick={handleDownload}
+                        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-slate-900 py-4 text-sm font-black uppercase tracking-widest text-white hover:bg-slate-800 transition-all shadow-lg"
+                    >
+                        <Zap size={16} fill="currentColor" />
+                        Download SVG
+                    </button>
+                    
+                    <button
+                        onClick={() => {
+                            navigator.clipboard.writeText(url);
+                            toast.success("Link copied!");
+                        }}
+                        className="w-full flex items-center justify-center gap-2 rounded-2xl bg-white py-4 text-sm font-black uppercase tracking-widest text-slate-600 border border-slate-200 hover:border-indigo-200 hover:text-indigo-600 transition-all"
+                    >
+                        <Copy size={16} />
+                        Copy Join URL
+                    </button>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+function JoinSlide({ session, onClose }: { session: any, onClose: () => void }) {
+    const slideRef = useRef<HTMLDivElement>(null);
+    const [theme, setTheme] = useState<"editorial" | "swiss" | "aura" | "split" | "glass">("editorial");
+    const [exporting, setExporting] = useState(false);
+    const [scale, setScale] = useState(1);
+
+    const url = `https://pulse19.vercel.app/join/${session.code}`;
+    const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=1000x1000&data=${encodeURIComponent(url)}&format=svg`;
+
+    useEffect(() => {
+        const handleEsc = (e: KeyboardEvent) => {
+            if (e.key === "Escape") onClose();
+        };
+        const handleResize = () => {
+            if (!typeof window) return;
+            const width = window.innerWidth * 0.9;
+            const height = window.innerHeight * 0.8;
+            const scaleW = width / 1920;
+            const scaleH = height / 1080;
+            setScale(Math.min(scaleW, scaleH));
+        };
+
+        handleResize();
+        window.addEventListener("keydown", handleEsc);
+        window.addEventListener("resize", handleResize);
+        return () => {
+            window.removeEventListener("keydown", handleEsc);
+            window.removeEventListener("resize", handleResize);
+        };
+    }, [onClose]);
+
+    const handleExport = async () => {
+        if (!slideRef.current) return;
+        setExporting(true);
+        try {
+            const dataUrl = await toPng(slideRef.current, {
+                cacheBust: true,
+                width: 1920,
+                height: 1080,
+                style: {
+                    transform: 'scale(1)',
+                    transformOrigin: 'top left'
+                }
+            });
+            const link = document.createElement('a');
+            link.download = `pulse-slide-${session.code}-${theme}.png`;
+            link.href = dataUrl;
+            link.click();
+            toast.success("Slide exported for PPT!");
+        } catch (err) {
+            console.error(err);
+            toast.error("Failed to export slide");
+        } finally {
+            setExporting(false);
+        }
+    };
+
+    const themes = {
+        editorial: "bg-[#050505] text-white",
+        swiss: "bg-[#f4f4f4] text-slate-900",
+        aura: "bg-[#0a0a0f] text-white",
+        split: "bg-white text-slate-900",
+        glass: "bg-[#0f172a] text-white"
+    };
+
+    return (
+        <div className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl flex flex-col items-center justify-center overflow-hidden animate-in fade-in duration-700 font-sans">
+            {/* Toolbar - Floating & Translucent */}
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-white/10 backdrop-blur-2xl border border-white/20 px-6 py-3 rounded-full z-[110] shadow-2xl shadow-black/50">
+                <div className="flex items-center gap-3 mr-4 border-r border-white/10 pr-4">
+                    {(Object.keys(themes) as Array<keyof typeof themes>).map((t) => (
+                        <button
+                            key={t}
+                            onClick={() => setTheme(t)}
+                            className={`w-6 h-6 rounded-full border-2 transition-all duration-500 hover:scale-125 ${theme === t ? 'border-white scale-110' : 'border-transparent opacity-40'} ${themes[t].split(' ')[0]}`}
+                            title={t}
+                        />
+                    ))}
+                </div>
+                <button
+                    onClick={handleExport}
+                    disabled={exporting}
+                    className="flex items-center gap-2 px-5 py-2 bg-indigo-600 text-white rounded-full text-[10px] font-black uppercase tracking-[0.2em] hover:bg-indigo-500 transition-all active:scale-95 disabled:opacity-50"
+                >
+                    {exporting ? <Loader2 className="animate-spin" size={12} /> : <ExternalLink size={12} />}
+                    Export Slide
+                </button>
+                <button 
+                    onClick={onClose}
+                    className="ml-2 p-2 rounded-full bg-white/10 text-white/70 hover:bg-red-500 hover:text-white transition-all active:rotate-90"
+                >
+                    <X size={18} />
+                </button>
+            </div>
+
+            {/* Responsive Container for the Slide */}
+            <div className="w-full h-full flex items-center justify-center p-4">
+                <div 
+                    ref={slideRef}
+                    className={`relative shadow-[0_0_100px_rgba(0,0,0,0.5)] transition-all duration-1000 ${themes[theme]} flex flex-col items-center justify-center overflow-hidden rounded-[2rem]`}
+                    style={{ 
+                        width: '1920px', 
+                        height: '1080px',
+                        transform: `scale(${scale})`,
+                        transformOrigin: 'center center',
+                        flexShrink: 0
+                    }}
+                >
+                {/* --- THEME: EDITORIAL (Cyber-Minimal) --- */}
+                {theme === "editorial" && (
+                    <div className="absolute inset-0 overflow-hidden">
+                        <div className="absolute top-[-20%] left-[-10%] text-[40rem] font-black text-white/[0.02] leading-none select-none tracking-tighter">JOIN</div>
+                        <div className="absolute bottom-[-10%] right-[-5%] text-[30rem] font-black text-indigo-500/[0.03] leading-none select-none tracking-tighter italic">PULSE</div>
+                        <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_30%,rgba(79,70,229,0.15),transparent_50%)]" />
+                        
+                        <div className="relative z-10 w-full max-w-[1600px] grid grid-cols-12 gap-20 items-center px-32">
+                            <div className="col-span-7 space-y-16">
+                                <div className="space-y-4">
+                                    <div className="w-16 h-2 bg-indigo-500" />
+                                    <h1 className="text-9xl font-black tracking-tighter leading-[0.85] uppercase max-w-2xl">
+                                        {session.title}
+                                    </h1>
+                                </div>
+                                <div className="space-y-12">
+                                    <div className="space-y-3">
+                                        <p className="text-indigo-500 font-black uppercase tracking-[0.5em] text-sm">Join the session at</p>
+                                        <p className="text-6xl font-light tracking-tight text-white/90">pulse19.vercel.app</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <p className="text-indigo-500 font-black uppercase tracking-[0.5em] text-sm">Access Code</p>
+                                        <p className="text-[10rem] font-black tracking-tighter leading-none text-indigo-500 drop-shadow-[0_0_80px_rgba(79,70,229,0.4)]">{session.code}</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div className="col-span-5 flex justify-end">
+                                <div className="relative p-10 bg-white rounded-[3.5rem] shadow-[0_50px_100px_-20px_rgba(0,0,0,0.8)] transform rotate-2 hover:rotate-0 transition-transform duration-700">
+                                    <img src={qrUrl} alt="QR" className="w-[380px] h-[380px]" />
+                                    <div className="absolute -bottom-8 -right-8 w-28 h-28 bg-indigo-600 rounded-full flex items-center justify-center shadow-2xl border-[10px] border-[#050505]">
+                                        <Zap className="text-white" size={40} fill="currentColor" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- THEME: SWISS (Neo-Minimalist) --- */}
+                {theme === "swiss" && (
+                    <div className="absolute inset-0 flex flex-col p-24">
+                        <div className="flex-1 border-[16px] border-slate-900 p-20 flex flex-col justify-between">
+                            <div className="flex justify-between items-start">
+                                <h1 className="text-9xl font-black tracking-tighter leading-none uppercase max-w-4xl">
+                                    {session.title}
+                                </h1>
+                                <div className="bg-red-600 text-white px-8 py-4 text-2xl font-black uppercase tracking-widest">LIVE</div>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-20 items-end">
+                                <div className="space-y-12">
+                                    <div className="space-y-4">
+                                        <p className="text-slate-400 font-bold uppercase tracking-[0.3em] text-xl">01. URL</p>
+                                        <p className="text-5xl font-black underline decoration-[12px] decoration-red-600 underline-offset-8">pulse19.vercel.app</p>
+                                    </div>
+                                    <div className="space-y-4">
+                                        <p className="text-slate-400 font-bold uppercase tracking-[0.3em] text-xl">02. SESSION CODE</p>
+                                        <p className="text-[10rem] font-black leading-none tracking-tighter">{session.code}</p>
+                                    </div>
+                                </div>
+                                <div className="flex justify-end">
+                                    <div className="p-6 bg-slate-900">
+                                        <img src={qrUrl} alt="QR" className="w-[320px] h-[320px] invert shadow-2xl" />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- THEME: AURA (Fluid/Vibrant) --- */}
+                {theme === "aura" && (
+                    <div className="absolute inset-0 bg-[#020205] overflow-hidden">
+                        {/* Fluid background elements */}
+                        <div className="absolute top-[-10%] right-[-5%] w-[70%] h-[70%] bg-indigo-600/30 rounded-full blur-[180px] animate-pulse duration-[10s]" />
+                        <div className="absolute bottom-[-15%] left-[-10%] w-[60%] h-[60%] bg-fuchsia-600/20 rounded-full blur-[150px] animate-bounce duration-[15s]" />
+                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')] opacity-[0.03] pointer-events-none" />
+                        
+                        <div className="relative z-10 w-full h-full flex flex-col items-center justify-center p-32">
+                            <div className="absolute top-20 left-32 flex items-center gap-4">
+                                <div className="w-8 h-8 bg-white rounded-full flex items-center justify-center">
+                                    <Zap size={14} className="text-black" fill="currentColor" />
+                                </div>
+                                <span className="text-xs font-black tracking-[0.5em] uppercase text-white/40">Live Presentation</span>
+                            </div>
+
+                            <div className="grid grid-cols-12 gap-24 items-center w-full max-w-[1600px]">
+                                <div className="col-span-12 text-center mb-20">
+                                    <h1 className="text-[12rem] font-black tracking-tighter leading-none bg-gradient-to-b from-white via-white to-white/20 bg-clip-text text-transparent italic uppercase">
+                                        {session.title}
+                                    </h1>
+                                </div>
+                                <div className="col-span-12 flex items-center justify-center gap-20">
+                                    <div className="relative group">
+                                        <div className="absolute -inset-10 bg-indigo-500/30 rounded-full blur-[80px] opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+                                        <div className="relative p-10 bg-white rounded-[4rem] shadow-2xl shadow-black/50 transform -rotate-2 hover:rotate-0 transition-all duration-700">
+                                            <img src={qrUrl} alt="QR" className="w-[350px] h-[350px]" />
+                                        </div>
+                                    </div>
+
+                                    <div className="bg-white/5 backdrop-blur-3xl border border-white/10 p-16 rounded-[4rem] flex flex-col justify-center space-y-12">
+                                        <div className="space-y-3">
+                                            <p className="text-indigo-400 font-black uppercase tracking-[0.4em] text-sm">Step 1. Visit URL</p>
+                                            <p className="text-6xl font-light tracking-tight text-white">pulse19.vercel.app</p>
+                                        </div>
+                                        <div className="w-20 h-px bg-white/20" />
+                                        <div className="space-y-4">
+                                            <p className="text-fuchsia-400 font-black uppercase tracking-[0.4em] text-sm">Step 2. Use Code</p>
+                                            <p className="text-[12rem] font-black tracking-tighter leading-none text-white drop-shadow-[0_0_80px_rgba(255,255,255,0.2)]">{session.code}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- THEME: SPLIT (High-Contrast Hero) --- */}
+                {theme === "split" && (
+                    <div className="absolute inset-0 grid grid-cols-12 overflow-hidden bg-white">
+                        <div className="col-span-5 bg-slate-900 relative flex flex-col justify-between p-24">
+                            <div className="absolute top-0 left-0 w-full h-full bg-[url('https://www.transparenttextures.com/patterns/stardust.png')] opacity-10" />
+                            <div className="relative z-10">
+                                <div className="w-12 h-1 bg-indigo-500 mb-8" />
+                                <h1 className="text-8xl font-black tracking-tighter leading-[0.9] text-white uppercase italic">
+                                    {session.title}
+                                </h1>
+                            </div>
+                            
+                            <div className="relative z-10 space-y-8">
+                                <p className="text-indigo-400 font-black uppercase tracking-[0.5em] text-xs">Scan to Participate</p>
+                                <div className="p-8 bg-white rounded-[3rem] w-fit shadow-[0_30px_60px_-12px_rgba(0,0,0,0.5)] transform -rotate-3">
+                                    <img src={qrUrl} alt="QR" className="w-[320px] h-[320px]" />
+                                </div>
+                            </div>
+                        </div>
+                        <div className="col-span-7 flex flex-col justify-center px-32 relative">
+                            <div className="absolute right-[-10%] top-1/2 -translate-y-1/2 text-[35rem] font-black text-slate-100 select-none pointer-events-none tracking-tighter leading-none">CODE</div>
+                            
+                            <div className="relative z-10 space-y-24">
+                                <div className="space-y-6">
+                                    <p className="text-slate-400 font-black uppercase tracking-[0.4em] text-xl">1. Open on your phone</p>
+                                    <p className="text-8xl font-black tracking-tighter text-slate-900">pulse19.vercel.app</p>
+                                </div>
+                                <div className="w-32 h-2 bg-slate-900" />
+                                <div className="space-y-6">
+                                    <p className="text-indigo-600 font-black uppercase tracking-[0.4em] text-xl">2. Enter Session Code</p>
+                                    <p className="text-[14rem] font-black tracking-tighter leading-none text-slate-900 drop-shadow-2xl">{session.code}</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                {/* --- THEME: GLASS (Modern Frosted) --- */}
+                {theme === "glass" && (
+                    <div className="absolute inset-0 bg-[#0f172a]">
+                        <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-blue-600/30 rounded-full blur-[120px] animate-pulse" />
+                        <div className="absolute bottom-1/4 right-1/4 w-[600px] h-[600px] bg-purple-600/20 rounded-full blur-[150px]" />
+                        
+                        <div className="relative z-10 w-full h-full flex items-center justify-center px-20">
+                            <div className="w-full max-w-[1500px] bg-white/5 backdrop-blur-[100px] border border-white/10 rounded-[5rem] p-24 shadow-2xl grid grid-cols-12 gap-20 items-center">
+                                <div className="col-span-7 space-y-16">
+                                    <h1 className="text-8xl font-black tracking-tighter leading-tight text-white">
+                                        {session.title}
+                                    </h1>
+                                    <div className="grid grid-cols-2 gap-12">
+                                        <div className="space-y-4">
+                                            <p className="text-slate-400 font-bold uppercase tracking-[0.3em] text-xs">URL</p>
+                                            <p className="text-3xl font-black text-white/90">pulse19.vercel.app</p>
+                                        </div>
+                                        <div className="space-y-4">
+                                            <p className="text-slate-400 font-bold uppercase tracking-[0.3em] text-xs">Code</p>
+                                            <p className="text-6xl font-black text-white">{session.code}</p>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div className="col-span-5 flex justify-end">
+                                    <div className="p-8 bg-white/10 backdrop-blur-3xl rounded-[3rem] border border-white/20 shadow-inner shrink-0">
+                                        <div className="p-6 bg-white rounded-[2rem] aspect-square flex items-center justify-center">
+                                            <img src={qrUrl} alt="QR" className="w-[300px] h-[300px] object-contain" />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
+                <div className="absolute bottom-10 left-10 text-[10px] font-black uppercase tracking-[0.5em] text-white/20 pointer-events-none">
+                    Session Identity: {session.id.slice(0, 8)}
+                </div>
+            </div>
+        </div>
+    </div>
     );
 }
 
@@ -540,7 +931,7 @@ function LiveResults({ sessionId, questionId }: { sessionId: string, questionId:
             </div>
 
             <p className="mt-8 text-[10px] font-black uppercase tracking-widest text-slate-300">Total interactions: {total}</p>
-        </div >
+        </div>
     );
 }
 
