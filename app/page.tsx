@@ -217,6 +217,48 @@ export default function Home() {
              ))}
           </div>
 
+          {/* Why Pulse Section */}
+          <div className="py-24 border-t border-slate-100 grid lg:grid-cols-12 gap-12 items-center">
+            <div className="lg:col-span-7 space-y-6">
+              <div className="inline-flex items-center gap-2 px-2 py-0.5 rounded-md bg-rose-50 text-[10px] font-bold uppercase tracking-wider text-rose-600">
+                The Status Quo
+              </div>
+              <h2 className="text-3xl font-black tracking-tight text-slate-900 leading-tight">
+                Engagement shouldn't <br/>
+                be a luxury.
+              </h2>
+              <div className="space-y-4 text-sm font-medium text-slate-500 leading-relaxed max-w-lg">
+                <p>
+                  Most engagement tools today share the same problem: they lock basic human connection behind expensive monthly subscriptions and clunky "Pro" paywalls. 
+                </p>
+                <p>
+                  Presenters are forced to choose between boring, static slides or managing complex, over-priced software that requires participant sign-ups.
+                </p>
+              </div>
+            </div>
+            <div className="lg:col-span-5 bg-slate-50 rounded-[2rem] p-8 space-y-6 border border-slate-100">
+              <div className="space-y-2">
+                 <h3 className="text-xs font-black uppercase tracking-widest text-slate-900">The Pulse Philosophy</h3>
+                 <p className="text-[11px] font-medium text-slate-400">Why we built this platform</p>
+              </div>
+              <div className="space-y-4">
+                 {[
+                   { label: "Zero Paywalls", desc: "No subscriptions. No 'Pro' features. Just engagement." },
+                   { label: "Zero Friction", desc: "No apps to download. No accounts for your audience." },
+                   { label: "High Fidelity", desc: "Art-directed templates that match your premium slides." }
+                 ].map((p, i) => (
+                   <div key={i} className="flex gap-4">
+                      <div className="w-1.5 h-1.5 rounded-full bg-indigo-600 mt-1.5 shrink-0" />
+                      <div className="space-y-1">
+                        <p className="text-[11px] font-black uppercase tracking-wider text-slate-900">{p.label}</p>
+                        <p className="text-[11px] font-medium text-slate-400">{p.desc}</p>
+                      </div>
+                   </div>
+                 ))}
+              </div>
+            </div>
+          </div>
+
         </div>
       </main>
 
